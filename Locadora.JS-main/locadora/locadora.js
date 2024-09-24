@@ -9,7 +9,19 @@ let usuarioAtual = null;
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
-});
+}); // Corrigido: Adicionei o ponto e vírgula aqui.
+
+function exibirEstrelas(estrelas) {
+    const estrelasInteiras = Math.floor(estrelas);
+    const meiaEstrela = estrelas % 1 !== 0; // Verifica se tem meia estrela
+    let resultado = '🌟'.repeat(estrelasInteiras); // Estrelas inteiras
+
+    if (meiaEstrela) {
+        resultado += '⭐'; // Usando um emoji para meia estrela
+    }
+
+    return resultado;
+}
 
 // Função para mostrar o menu principal
 function menu() {
@@ -67,7 +79,7 @@ function adicionarEstrelas() {
                 const filme = filmesDisponiveis[codigo];
                 const novaQuantidadeEstrelas = Math.min(Math.max(parseInt(filme.estrelas) + parseInt(estrelas), 1), 5); 
                 filme.estrelas = novaQuantidadeEstrelas;
-                console.log(`Estrelas do filme "${filme.nome}" atualizadas para: ${'⭐'.repeat(filme.estrelas)}`);
+                console.log(`Estrelas do filme "${filme.nome}" atualizadas para: ${exibirEstrelas(filme.estrelas)}`); // Corrigido: Usando a função exibirEstrelas
                 salvarFilme(codigo, filme);
                 menu();
             });
@@ -82,7 +94,7 @@ function adicionarEstrelas() {
 function verCatalogo() {
     console.log("\n--- Catálogo de Filmes ---");
     for (const [codigo, filme] of Object.entries(filmesDisponiveis)) {
-        console.log(`${filme.nome} ${'⭐'.repeat(filme.estrelas)} (Código: ${codigo})`);
+        console.log(`${filme.nome} ${exibirEstrelas(filme.estrelas)} (Código: ${codigo})`); // Corrigido: Usando a função exibirEstrelas
     }
     rl.question("Digite o código do filme para mais detalhes (ou 'voltar' para retornar): ", (codigo) => {
         if (codigo.toLowerCase() === 'voltar') {
@@ -101,7 +113,7 @@ function verCatalogo() {
 function mostrarDetalhesFilme(codigo) {
     const filme = filmesDisponiveis[codigo];
     console.log(`\nTítulo: ${filme.nome}`);
-    console.log(`Estrelas: ${'⭐'.repeat(filme.estrelas)}`);
+    console.log(`Estrelas: ${exibirEstrelas(filme.estrelas)}`); // Corrigido: Usando a função exibirEstrelas
     console.log("1 - Ver Prólogo");
     console.log("2 - Ver Comentários");
     console.log("3 - Voltar ao Catálogo");
@@ -116,9 +128,6 @@ function mostrarDetalhesFilme(codigo) {
                 break;
             case '3':
                 verCatalogo(); // Volta ao catálogo
-                break;
-            case '7':
-                menu(); // Voltar ao menu principal
                 break;
             default:
                 console.log("Opção inválida. Tente novamente.");
@@ -159,16 +168,28 @@ function adicionarFilme() {
     }
 
     console.log("\n--- Adicionar Filme ---");
-    rl.question("Digite o código do filme: ", (codigo) => {
-        rl.question("Digite o nome do filme: ", (nome) => {
-            rl.question("Digite o tipo do filme: ", (tipo) => {
-                rl.question("Digite a quantidade de estrelas (1 a 5): ", (estrelas) => {
-                    rl.question("Digite o prólogo do filme: ", (prologo) => {
-                        rl.question("Digite os comentários do filme: ", (comentarios) => {
-                            if (filmesDisponiveis[codigo]) {
-                                console.log("Um filme com esse código já existe. Tente outro código.");
-                                return adicionarFilme();
-                            }
+    rl.question("Digite o código do filme (ou 'voltar' para retornar): ", (codigo) => {
+        if (codigo.toLowerCase() === 'voltar') return menu();
+        
+        rl.question("Digite o nome do filme (ou 'voltar' para retornar): ", (nome) => {
+            if (nome.toLowerCase() === 'voltar') return adicionarFilme();
+            
+            rl.question("Digite o tipo do filme (ou 'voltar' para retornar): ", (tipo) => {
+                if (tipo.toLowerCase() === 'voltar') return adicionarFilme();
+                
+                rl.question("Digite a quantidade de estrelas (1 a 5, incluindo frações como 4.5): ", (estrelas) => {
+                    const estrelasNumerico = parseFloat(estrelas);
+                    if (estrelasNumerico < 1 || estrelasNumerico > 5) {
+                        console.log("Por favor, insira um valor entre 1 e 5.");
+                        return adicionarFilme();
+                    }
+                    rl.question("Digite o prólogo do filme (ou 'voltar' para retornar): ", (prologo) => {
+                        if (prologo.toLowerCase() === 'voltar') return adicionarFilme();
+                        
+                        rl.question("Digite os comentários do filme (ou 'voltar' para retornar): ", (comentarios) => {
+                            if (comentarios.toLowerCase() === 'voltar') return adicionarFilme();
+                            
+                            // Salva o filme, prólogo e comentários
                             filmesDisponiveis[codigo] = {
                                 nome: nome,
                                 tipo: tipo,
@@ -186,6 +207,7 @@ function adicionarFilme() {
         });
     });
 }
+
 
 // Função para carregar os usuários do arquivo
 function carregarUsuarios(callback) {
@@ -234,7 +256,8 @@ function carregarFilmes(callback) {
 // Função para fazer login
 function fazerLogin() {
     console.log("\n--- Fazer Login ---");
-    rl.question("Digite seu CPF (somente números): ", (cpf) => {
+    rl.question("Digite seu CPF (somente números) (ou 'voltar' para retornar): ", (cpf) => {
+        if (cpf.toLowerCase() === 'voltar') return menu();
         const usuarioKey = cpf.replace(/\D/g, '');
         if (usuarios[usuarioKey]) {
             usuarioAtual = usuarios[usuarioKey];
@@ -246,6 +269,7 @@ function fazerLogin() {
         }
     });
 }
+
 
 // Função para fazer locação
 function fazerLocacao() {
@@ -272,10 +296,14 @@ function totalLocacoesDia() {
 // Função para registrar um novo usuário
 function registrar() {
     console.log("\n--- Registrar ---");
-    rl.question("Digite seu nome: ", (nome) => {
-        rl.question("Digite seu email: ", (email) => {
-            rl.question("Digite seu CPF (somente números): ", (cpf) => {
-                rl.question("Digite seu CEP: ", (cep) => {
+    rl.question("Digite seu nome (ou 'voltar' para retornar): ", (nome) => {
+        if (nome.toLowerCase() === 'voltar') return menu();
+        rl.question("Digite seu email (ou 'voltar' para retornar): ", (email) => {
+            if (email.toLowerCase() === 'voltar') return registrar();
+            rl.question("Digite seu CPF (somente números) (ou 'voltar' para retornar): ", (cpf) => {
+                if (cpf.toLowerCase() === 'voltar') return registrar();
+                rl.question("Digite seu CEP (ou 'voltar' para retornar): ", (cep) => {
+                    if (cep.toLowerCase() === 'voltar') return registrar();
                     const usuarioKey = cpf.replace(/\D/g, '');
                     if (usuarios[usuarioKey]) {
                         console.log("Esse CPF já está registrado. Tente novamente.");
