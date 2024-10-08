@@ -29,7 +29,7 @@ function validarEmail(email) {
 }
 
 function validarCPF(cpf) {
-    return cpf.length === 11 && /^\d+$/.test(cpf);
+    return cpf.length === 11 && /^\d+$/.test(cpf.trim());
 }
 
 function menu() {
@@ -48,21 +48,21 @@ function menu() {
         });
     } else if (usuarioAtual.cpf === '12312312312') { // Dono
         console.log("\nMenu do Dono:");
-        console.log("1 - Fazer locação");
-        console.log("2 - Exibir histórico de locações");
+        console.log("1 - Fazer locação (não implementado)");
+        console.log("2 - Exibir histórico de locações (não implementado)");
         console.log("3 - Adicionar filme");
-        console.log("4 - Total de locações do dia");
-        console.log("5 - Ver catálogo de filmes");
+        console.log("4 - Total de locações do dia (não implementado)");
+        console.log("5 - Ver catálogo de filmes (não implementado)");
         console.log("6 - Adicionar estrelas ao filme");
         console.log("7 - Gerenciar filmes sugeridos");
         console.log("8 - Logout");
         rl.question("Escolha uma opção: ", (opcao) => {
             switch (opcao) {
-                case '1': fazerLocacao(); break;
-                case '2': exibirHistorico(); break;
+                case '1': console.log("Função não implementada."); menu(); break;
+                case '2': console.log("Função não implementada."); menu(); break;
                 case '3': adicionarFilme(); break;
-                case '4': totalLocacoesDia(); break;
-                case '5': verCatalogo(); break;
+                case '4': console.log("Função não implementada."); menu(); break;
+                case '5': console.log("Função não implementada."); menu(); break;
                 case '6': adicionarEstrelas(); break;
                 case '7': gerenciarSugeridos(); break;
                 case '8': logout(); break;
@@ -71,16 +71,16 @@ function menu() {
         });
     } else { // Cliente
         console.log("\nMenu do Cliente:");
-        console.log("1 - Fazer locação");
-        console.log("2 - Exibir histórico de locações");
-        console.log("3 - Ver catálogo de filmes");
+        console.log("1 - Fazer locação (não implementado)");
+        console.log("2 - Exibir histórico de locações (não implementado)");
+        console.log("3 - Ver catálogo de filmes (não implementado)");
         console.log("4 - Sugerir filme");
         console.log("5 - Logout");
         rl.question("Escolha uma opção: ", (opcao) => {
             switch (opcao) {
-                case '1': fazerLocacao(); break;
-                case '2': exibirHistorico(); break;
-                case '3': verCatalogo(); break;
+                case '1': console.log("Função não implementada."); menu(); break;
+                case '2': console.log("Função não implementada."); menu(); break;
+                case '3': console.log("Função não implementada."); menu(); break;
                 case '4': sugerirFilme(); break;
                 case '5': logout(); break;
                 default: console.log("Opção inválida. Tente novamente."); menu();
@@ -129,38 +129,95 @@ function sugerirFilme() {
     });
 }
 
-function adicionarFilmeCatalogo() {
-    rl.question("Digite o número do filme sugerido para adicionar ao catálogo: ", (numero) => {
-        const index = parseInt(numero) - 1;
-        if (index >= 0 && index < sugeridos.length) {
-            const filme = sugeridos[index];
-            rl.question("Digite o código do filme: ", (codigo) => {
+function adicionarFilme() {
+    console.log("\n--- Adicionar Filme ---");
+    rl.question("Você deseja adicionar um filme sugerido ao catálogo? (sim/não): ", (resposta) => {
+        if (resposta.toLowerCase() === 'sim') {
+            adicionarFilmeSugerido();
+        } else {
+            adicionarFilmeManual();
+        }
+    });
+}
+
+function adicionarFilmeSugerido() {
+    carregarSugeridos(() => {
+        if (sugeridos.length === 0) {
+            console.log("Nenhum filme sugerido disponível.");
+            menu();
+            return;
+        }
+        console.log("Filmes sugeridos:");
+        sugeridos.forEach((filme, index) => {
+            console.log(`${index + 1} - ${filme}`);
+        });
+        rl.question("Digite o número do filme sugerido para adicionar ao catálogo: ", (numero) => {
+            const index = parseInt(numero) - 1;
+            if (index >= 0 && index < sugeridos.length) {
+                const filme = sugeridos[index];
+                rl.question("Digite o código do filme: ", (codigo) => {
+                    if (!filmesDisponiveis[codigo]) {
+                        rl.question("Digite o tipo do filme: ", (tipo) => {
+                            rl.question("Digite a quantidade de estrelas (1 a 5): ", (estrelas) => {
+                                const estrelasNumerico = parseFloat(estrelas);
+                                if (estrelasNumerico < 1 || estrelasNumerico > 5 || isNaN(estrelasNumerico)) {
+                                    console.log("Por favor, insira um valor válido entre 1 e 5.");
+                                    return adicionarFilmeSugerido();
+                                }
+                                filmesDisponiveis[codigo] = {
+                                    nome: filme,
+                                    tipo: tipo,
+                                    estrelas: estrelasNumerico
+                                };
+                                salvarFilme(codigo, filmesDisponiveis[codigo]);
+                                console.log(`Filme "${filme}" adicionado ao catálogo!`);
+                                sugeridos.splice(index, 1); // Remove da lista de sugeridos
+                                salvarSugeridos(); // Atualiza o arquivo de sugestões
+                                menu();
+                            });
+                        });
+                    } else {
+                        console.log("Esse código de filme já existe. Tente outro.");
+                        adicionarFilmeSugerido();
+                    }
+                });
+            } else {
+                console.log("Número inválido. Tente novamente.");
+                adicionarFilmeSugerido();
+            }
+        });
+    });
+}
+
+function adicionarFilmeManual() {
+    rl.question("Digite o código do filme: ", (codigo) => {
+        if (!filmesDisponiveis[codigo]) {
+            rl.question("Digite o nome do filme: ", (nome) => {
                 rl.question("Digite o tipo do filme: ", (tipo) => {
                     rl.question("Digite a quantidade de estrelas (1 a 5): ", (estrelas) => {
                         const estrelasNumerico = parseFloat(estrelas);
-                        if (estrelasNumerico < 1 || estrelasNumerico > 5) {
-                            console.log("Por favor, insira um valor entre 1 e 5.");
-                            return adicionarFilmeCatalogo();
+                        if (estrelasNumerico < 1 || estrelasNumerico > 5 || isNaN(estrelasNumerico)) {
+                            console.log("Por favor, insira um valor válido entre 1 e 5.");
+                            return adicionarFilmeManual();
                         }
                         filmesDisponiveis[codigo] = {
-                            nome: filme,
+                            nome: nome,
                             tipo: tipo,
-                            estrelas: estrelas
+                            estrelas: estrelasNumerico
                         };
                         salvarFilme(codigo, filmesDisponiveis[codigo]);
-                        console.log(`Filme "${filme}" adicionado ao catálogo!`);
-                        sugeridos.splice(index, 1); // Remove da lista de sugeridos
-                        salvarSugeridos(); // Atualiza o arquivo de sugestões
+                        console.log(`Filme "${nome}" adicionado ao catálogo!`);
                         menu();
                     });
                 });
             });
         } else {
-            console.log("Número inválido. Tente novamente.");
-            adicionarFilmeCatalogo();
+            console.log("Esse código de filme já existe. Tente outro.");
+            adicionarFilmeManual();
         }
     });
 }
+
 
 function removerFilmeSugerido() {
     rl.question("Digite o número do filme a ser removido: ", (numero) => {
@@ -180,6 +237,7 @@ function carregarSugeridos(callback) {
     fs.readFile('sugeridos.txt', 'utf8', (err, data) => {
         if (err) {
             console.error("Erro ao ler o arquivo de sugestões:", err);
+            sugeridos = []; // Inicializa a lista vazia em caso de erro
             return callback();
         }
         sugeridos = data.trim().split('\n').filter(Boolean);
@@ -196,10 +254,8 @@ function salvarSugeridos() {
     });
 }
 
-// Funções de registrar, fazerLogin, adicionarEstrelas, etc. seguem...
-
 function adicionarEstrelas() {
-    if (usuarioAtual.cpf !== '12312312312') {
+    if (!usuarioAtual || usuarioAtual.cpf !== '12312312312') {
         console.log("Você não tem permissão para adicionar estrelas aos filmes.");
         return menu();
     }
@@ -209,7 +265,12 @@ function adicionarEstrelas() {
         if (filmesDisponiveis[codigo]) {
             rl.question("Digite a quantidade de estrelas a adicionar (1 a 5): ", (estrelas) => {
                 const filme = filmesDisponiveis[codigo];
-                const novaQuantidadeEstrelas = Math.min(Math.max(parseInt(filme.estrelas) + parseInt(estrelas), 1), 5);
+                const estrelasNumerico = parseFloat(estrelas);
+                if (estrelasNumerico < 1 || estrelasNumerico > 5 || isNaN(estrelasNumerico)) {
+                    console.log("Por favor, insira um valor válido entre 1 e 5.");
+                    return adicionarEstrelas();
+                }
+                const novaQuantidadeEstrelas = Math.min(Math.max(parseFloat(filme.estrelas) + estrelasNumerico, 1), 5);
                 filme.estrelas = novaQuantidadeEstrelas;
                 console.log(`Estrelas do filme "${filme.nome}" atualizadas para: ${exibirEstrelas(filme.estrelas)}`);
                 salvarFilme(codigo, filme);
@@ -222,7 +283,6 @@ function adicionarEstrelas() {
     });
 }
 
-// Função para fazer login
 function fazerLogin() {
     console.log("\n--- Login ---");
     rl.question("Digite seu CPF (ou 'voltar' para retornar ao menu): ", (cpf) => {
@@ -246,7 +306,6 @@ function fazerLogin() {
     });
 }
 
-// Função para registrar usuários
 function registrar() {
     console.log("\n--- Registrar ---");
     rl.question("Digite seu nome (ou 'voltar' para retornar): ", (nome) => {
@@ -280,7 +339,6 @@ function registrar() {
     });
 }
 
-// Funções para carregar e salvar usuários e filmes
 function carregarUsuarios(callback) {
     fs.readFile('usuarios.txt', 'utf8', (err, data) => {
         if (err) {
@@ -314,7 +372,7 @@ function carregarFilmes(callback) {
         const linhas = data.trim().split('\n');
         linhas.forEach(linha => {
             const [codigo, nome, tipo, estrelas] = linha.split(';');
-            filmesDisponiveis[codigo] = { nome, tipo, estrelas };
+            filmesDisponiveis[codigo] = { nome, tipo, estrelas: parseFloat(estrelas) };
         });
         callback();
     });
